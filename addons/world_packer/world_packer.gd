@@ -2,19 +2,19 @@
 extends RefCounted
 class_name WorldPacker
 ## Packs a world of the game's own format from its sources into the packs the game mounts, in a
-## worlds directory given (the game's WORLDS_DIR): its files of no sector (WORLD_FILES) whole into
-## <name>/WORLD_PACK, and what is drawn of its sectors into a pack a block (<name>/<block>.pck),
-## sector by sector in the order of their
-## ids, a sector's files one after another (SECTOR_FILES) - so a sector may be read out of the pack
-## alone - but the sectors exported as far terrain only (WorldDescription.far_sectors), which no
-## block's pack holds. The far terrain (FAR_TERRAIN_DIR, a mesh a block) goes whole into
-## <name>/FAR_TERRAIN_PACK. Every file is under RESOURCES_DIR/<name>/ in the packs, at its place in the sources. Its
-## description for the game, <name>.json, is made of its WorldDescription (WorldDescription.FILE
-## beside its sources) as it is packed (pack()). Needs
-## nothing of libmaszyna, so a world's packs build without it (a world's `make packs`, its CI); the
-## names are libmaszyna's ReloadedProWorld's (WORLDS_DIR, RESOURCES_DIR, WORLD_PACK, BLOCKS_DIR,
-## SECTORS_DIR, PACK_EXTENSION, SECTOR_FILE_SUFFIXES, SCENERY_FILE, SCENARIO_FILE, FAR_TERRAIN_DIR,
-## FAR_TERRAIN_PACK).
+## worlds directory given (the game's WORLDS_DIR): its files of no sector (WORLD_FILES) and its
+## sections (SECTIONS_DIR) whole into <name>/WORLD_PACK, and what is drawn of its sectors into a pack
+## a block (<name>/<block>.pck), sector by sector in the order of their ids, a sector's files one
+## after another (SECTOR_FILES) - so a sector may be read out of the pack alone - but the sectors
+## exported as far terrain only (WorldDescription.far_sectors), which no block's pack holds. The far
+## terrain (FAR_TERRAIN_DIR, a mesh a block) goes whole into <name>/FAR_TERRAIN_PACK. Every file is
+## under RESOURCES_DIR/<name>/ in the packs, at its place in the sources. Its description for the
+## game, <name>.json, is made of its WorldDescription (WorldDescription.FILE beside its sources) as
+## it is packed (pack()). Needs nothing of the game's libraries, so a world's packs build without
+## them (a world's `make packs`, its CI); the names are libreloaded's World's (WORLDS_DIR,
+## RESOURCES_DIR, WORLD_FILE, SCENERY_FILE, SCENARIO_FILE, SECTIONS_DIR, PACK_EXTENSION) and
+## libreloadedpro's ReloadedProWorld's (BLOCKS_DIR, SECTORS_DIR, SECTOR_FILE_SUFFIXES,
+## FAR_TERRAIN_DIR, FAR_TERRAIN_PACK).
 
 ## The game's directory of worlds (the packs go into one - its <name>.json describing a world, its
 ## packs in <name>/ - as a world's sources are kept in one, its <name>/)
@@ -25,15 +25,17 @@ const PACK_EXTENSION: String = "pck"
 const DESCRIPTION_EXTENSION: String = "json"
 const BLOCKS_DIR: String = "blocks"
 const SECTORS_DIR: String = "sectors"
-## The world's scene, scenery and scenario, beside each other
-const WORLD_FILES: PackedStringArray = ["world.scn", "scenery.res", "scenario.res"]
+## The world's data, scenery and scenario, beside each other
+const WORLD_FILES: PackedStringArray = ["world.res", "scenery.res", "scenario.res"]
+## The world's sections beside them, a file a cell of the streaming grid
+const SECTIONS_DIR: String = "sections"
 ## What is drawn of a sector, its terrain and its roads, the suffixes of its id
-const SECTOR_FILES: PackedStringArray = [".drawn.scn", ".terrain.res", ".roads.res"]
-## The world's low-poly preview (the scenery importer's SIWorldPreview) beside its scene, packed alone
+const SECTOR_FILES: PackedStringArray = [".drawn.res", ".terrain.res", ".roads.res"]
+## The world's low-poly preview (the scenery importer's SIWorldPreview) beside its data, packed alone
 ## into worlds/<name>/PREVIEW_PACK: a screen choosing a world mounts only it
 const PREVIEW_FILE: String = "preview.res"
 const PREVIEW_PACK: String = "preview.pck"
-## The world's far terrain beside its scene, a mesh a block (the scenery importer's SIFarTerrain),
+## The world's far terrain beside its data, a mesh a block (the scenery importer's SIFarTerrain),
 ## packed whole into worlds/<name>/FAR_TERRAIN_PACK: the game mounts it with the world
 const FAR_TERRAIN_DIR: String = "far"
 const FAR_TERRAIN_PACK: String = "far.pck"
@@ -74,12 +76,14 @@ static func pack(dir: String, world_name: String, worlds_dir: String) -> bool:
     for block: String in blocks(dir):
         if not pack_block(dir, world_name, block, worlds_dir, world.far_sectors):
             return false
-    return write_description(world, world_name, worlds_dir)
+    return write_description(world, world_name, worlds_dir, blocks(dir).size() > 0)
 
 
 ## The world's description for the game, [param worlds_dir]/<name>.json, made of its
-## WorldDescription [param world] (its FILE beside its sources); false on failure
-static func write_description(world: Description, world_name: String, worlds_dir: String) -> bool:
+## WorldDescription [param world] (its FILE beside its sources), of a world divided into sectors when
+## [param sectored]; false on failure
+static func write_description(world: Description, world_name: String, worlds_dir: String,
+        sectored: bool) -> bool:
     var path: String = worlds_dir.path_join(world_name + "." + DESCRIPTION_EXTENSION)
     DirAccess.make_dir_recursive_absolute(path.get_base_dir())
     var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
@@ -87,17 +91,22 @@ static func write_description(world: Description, world_name: String, worlds_dir
         push_error("World packer: cannot write %s" % path)
         return false
     file.store_string(JSON.stringify(world.game_description(world_name, world_name.path_join(WORLD_PACK),
-            RESOURCES_DIR.path_join(world_name).path_join(WORLD_FILES[0])), "\t"))
+            RESOURCES_DIR.path_join(world_name).path_join(WORLD_FILES[0]), sectored), "\t"))
     return true
 
 
-## The world's files of no sector (WORLD_FILES) packed into [param worlds_dir]/<name>/WORLD_PACK;
-## returns the pack's path, "" on failure
+## The world's files of no sector (WORLD_FILES) and its sections (SECTIONS_DIR) packed into
+## [param worlds_dir]/<name>/WORLD_PACK; returns the pack's path, "" on failure
 static func pack_world(dir: String, world_name: String, worlds_dir: String) -> String:
     var files: Dictionary[String, String] = {}
     for file: String in WORLD_FILES:
         if FileAccess.file_exists(dir.path_join(file)):
             files[RESOURCES_DIR.path_join(world_name).path_join(file)] = dir.path_join(file)
+    var sections: PackedStringArray = DirAccess.get_files_at(dir.path_join(SECTIONS_DIR)) \
+            if DirAccess.dir_exists_absolute(dir.path_join(SECTIONS_DIR)) else PackedStringArray()
+    for file: String in sections:
+        files[RESOURCES_DIR.path_join(world_name).path_join(SECTIONS_DIR).path_join(file)] = \
+                dir.path_join(SECTIONS_DIR).path_join(file)
     var pck_path: String = worlds_dir.path_join(world_name).path_join(WORLD_PACK)
     return pck_path if write_pack(pck_path, files) else ""
 

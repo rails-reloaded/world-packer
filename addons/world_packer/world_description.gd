@@ -5,14 +5,12 @@ class_name WorldDescription
 ## scenario selector's), its frame (the projection its coordinates are in and their origin), its
 ## middle, where a player starts, and what it is drawn with - the world assets' packs it mounts, its
 ## biomes, its terrain's atlas. Kept beside the world's sources (FILE in worlds/<name>/), edited in
-## the inspector; the game's description of the world (worlds/<name>.json, libmaszyna's
-## ReloadedProWorld.read_description()) is made of it when the world is packed (WorldPacker.pack()). Its
+## the inspector; the game's description of the world (worlds/<name>.json, libreloaded's
+## World.read_description()) is made of it when the world is packed (WorldPacker.pack()). Its
 ## era (era_preset, era_year) is the scenery importer's alone: the game gets the world built of it.
 
 ## Beside the world's sources
 const FILE: String = "description.tres"
-## The .json's format the game reads (libmaszyna's ReloadedProWorld.FORMAT)
-const FORMAT: int = 5
 
 @export var title: String = ""
 @export_multiline var description: String = ""
@@ -50,11 +48,11 @@ const FORMAT: int = 5
 @export var far_sectors: PackedStringArray = []
 
 
-## The game's description of the world [param world_name] (ReloadedProWorld.read_description()): this
-## one's fields with where its pack [param pck] and its scene [param scene] are (WorldPacker's)
-func game_description(world_name: String, pck: String, scene: String) -> Dictionary:
-    return {
-        "format": FORMAT,
+## The game's description of the world [param world_name] (libreloaded's World.read_description()):
+## this one's fields with where its pack [param pck] and its data [param world] are (WorldPacker's),
+## and "sectors" for a world divided into them ([param sectored], libreloadedpro's)
+func game_description(world_name: String, pck: String, world: String, sectored: bool) -> Dictionary:
+    var game: Dictionary = {
         "name": world_name,
         "title": title,
         "description": description,
@@ -62,8 +60,11 @@ func game_description(world_name: String, pck: String, scene: String) -> Diction
         "center": [center.x, center.y],
         "player_start": [player_start.x, player_start.y, player_start.z],
         "pck": pck,
-        "scene": scene,
+        "world": world,
         "assets": assets,
         "biomes": biomes,
         "terrain": {"assets": terrain_assets, "region_size": region_size},
     }
+    if sectored:
+        game["sectors"] = true
+    return game
