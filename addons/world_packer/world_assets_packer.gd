@@ -3,9 +3,9 @@ extends RefCounted
 class_name WorldAssetsPacker
 ## Packs what the worlds share - every directory of RESOURCES_DIR, a pack each (common_terrain,
 ## common_facades, common_biomes) - into ASSETS_DIR/<pack>.pck of a directory: the game's, which
-## mounts them with a world (libmaszyna's MaszynaWorld.mount()) and whose packs the scenery importer
+## mounts them with a world (libmaszyna's ReloadedProWorld.mount()) and whose packs the scenery importer
 ## reads in the editor, or a release's (the world assets' `make packs` and CI). It needs nothing of
-## libmaszyna, so the packs build without it; its paths are MaszynaWorld's (ASSETS_DIR,
+## libmaszyna, so the packs build without it; its paths are ReloadedProWorld's (ASSETS_DIR,
 ## ASSETS_RESOURCES_DIR, PACK_EXTENSION). A pack holds a directory's files under their
 ## own paths, an imported one (.import beside it) as Godot's export does: its .import and what the
 ## import made (.godot/imported/), not its source; a shader with its UID beside it (UID_EXTENSION);

@@ -12,7 +12,7 @@ class_name WorldPacker
 ## description for the game, <name>.json, is made of its WorldDescription (WorldDescription.FILE
 ## beside its sources) as it is packed (pack()). Needs
 ## nothing of libmaszyna, so a world's packs build without it (a world's `make packs`, its CI); the
-## names are libmaszyna's MaszynaWorld's (WORLDS_DIR, RESOURCES_DIR, WORLD_PACK, BLOCKS_DIR,
+## names are libmaszyna's ReloadedProWorld's (WORLDS_DIR, RESOURCES_DIR, WORLD_PACK, BLOCKS_DIR,
 ## SECTORS_DIR, PACK_EXTENSION, SECTOR_FILE_SUFFIXES, SCENERY_FILE, SCENARIO_FILE, FAR_TERRAIN_DIR,
 ## FAR_TERRAIN_PACK).
 

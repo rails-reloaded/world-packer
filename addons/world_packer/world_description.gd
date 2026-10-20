@@ -6,12 +6,12 @@ class_name WorldDescription
 ## middle, where a player starts, and what it is drawn with - the world assets' packs it mounts, its
 ## biomes, its terrain's atlas. Kept beside the world's sources (FILE in worlds/<name>/), edited in
 ## the inspector; the game's description of the world (worlds/<name>.json, libmaszyna's
-## MaszynaWorld.read_description()) is made of it when the world is packed (WorldPacker.pack()). Its
+## ReloadedProWorld.read_description()) is made of it when the world is packed (WorldPacker.pack()). Its
 ## era (era_preset, era_year) is the scenery importer's alone: the game gets the world built of it.
 
 ## Beside the world's sources
 const FILE: String = "description.tres"
-## The .json's format the game reads (libmaszyna's MaszynaWorld.FORMAT)
+## The .json's format the game reads (libmaszyna's ReloadedProWorld.FORMAT)
 const FORMAT: int = 5
 
 @export var title: String = ""
@@ -50,7 +50,7 @@ const FORMAT: int = 5
 @export var far_sectors: PackedStringArray = []
 
 
-## The game's description of the world [param world_name] (MaszynaWorld.read_description()): this
+## The game's description of the world [param world_name] (ReloadedProWorld.read_description()): this
 ## one's fields with where its pack [param pck] and its scene [param scene] are (WorldPacker's)
 func game_description(world_name: String, pck: String, scene: String) -> Dictionary:
     return {
